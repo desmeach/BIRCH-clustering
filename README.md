@@ -1,2 +1,2 @@
 # BIRCH-clustering
-Birch clustering algorithm on PHP 7.2
+Birch clustering algorithm on PHP 7.4
