@@ -6,25 +6,33 @@ class ClusterAnalyzer {
     private int $B;
     private float $threshold;
     private float $L;
+    private array $clients;
     private array $points;
-    public function __construct(int $B, int $L, float $threshold) {
+    public function __construct() {
+        $db = new Database();
+        $this->clients = $db->getClients();
+    }
+    public function setParams(int $B, int $L, float $threshold, int $clientsNum, int $paramsNum) {
         $this->B = $B;
         $this->L = $L;
         $this->threshold = $threshold;
-        $this->points = $this->getPoints();
+        $this->points = $this->getPoints($clientsNum, $paramsNum);
     }
-    public function getPoints(): array {
-        $db = new Database();
-        $clients = $db->getClients();
+    public function getClients() {
+        return $this->clients;
+    }
+    public function getPoints(int $clientsNum, int $paramsNum): array {
         $points = [];
-        foreach ($clients as $client) {
-            $points[] = new Point($client);
+        $counter = 0;
+        foreach ($this->clients as $client) {
+            if ($counter == $clientsNum)
+                break;
+            $points[] = new Point($client, $paramsNum);
+            $counter++;
         }
         return $points;
     }
-    public function analyzeClusters() {
-        if (!count($this->points))
-            return;
+    public function analyzeClusters(): CFTree {
         $tree = new CFTree();
         $root = $tree->getRoot();
         foreach ($this->points as $point) {
@@ -46,7 +54,7 @@ class ClusterAnalyzer {
                 }
             }
         }
-        $this->printClusters($tree);
+        return $tree;
     }
     public function getClosestCluster(CFNode $node, Point $point): array {
         $inputs = $node->getInputs();
@@ -120,23 +128,48 @@ class ClusterAnalyzer {
         }
         return $SS;
     }
-    public function printClusters(CFTree $tree) {
+    public function printClusters(CFTree $tree)
+    {
+        echo '<div class="container text-center">' . '<h4>Результат анализа:</h4>';
         $root = $tree->getRoot();
         $inputs = $root->getInputs();
-        $this->printInputs($inputs, 1);
-    }
-    private function printInputs(array $inputs, int $clusterNum) {
+        $clusterNum = 1;
+        if (get_class($inputs[0]->getChildren()[0]) !== CFNode::class) {
+            $this->printLeafNode($root, $clusterNum);
+            return;
+        }
         foreach ($inputs as $input) {
-            $children = $input->getChildren();
-            if (gettype($children[0]) === 'object' && get_class($children[0]) === CFNode::class) {
-                $nodeInputs = $children[0]->getInputs();
-                $this->printInputs($nodeInputs, $clusterNum);
+            $leaf = $this->getLeafNode($input);
+            if ($leaf !== null) {
+                $clusterNum = $this->printLeafNode($leaf, $clusterNum);
             }
-            else {
-                foreach ($children as $child) {
-                    echo '<pre>' . $child->getName() . '</pre>';
+        }
+        echo '</div>';
+    }
+    private function getLeafNode(CFInput $input) {
+        $children = $input->getChildren();
+        foreach ($children as $node) {
+            $inputs = $node->getInputs();
+            foreach ($inputs as $_input) {
+                if (get_class($_input->getChildren()[0]) === CFNode::class) {
+                    $this->getLeafNode($_input);
                 }
+                else
+                    return $node;
             }
+        }
+    }
+    private function printLeafNode(CFNode $node, int $clusterNum) {
+        foreach ($node->getInputs() as $input) {
+            $this->printLeafInput($input, $clusterNum);
+            $clusterNum++;
+        }
+        return $clusterNum;
+    }
+    private function printLeafInput(CFInput $input, int $clusterNum) {
+        echo '<h5> Кластер №' . $clusterNum . '</h5>';
+        foreach ($input->getChildren() as $child) {
+            echo '<p>' . $child->getName() . '</p>';
         }
     }
 }

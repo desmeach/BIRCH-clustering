@@ -3,11 +3,11 @@
 class Point {
     private string $name;
     private array $data;
-    public function __construct($elem) {
+    public function __construct($elem, $paramsNum) {
         $this->name = $elem['name'];
-        $this->data = $this->normalizeData($elem);
+        $this->data = $this->normalizeData($elem, $paramsNum);
     }
-    private function normalizeData($elem): array {
+    private function normalizeData($elem, $paramsNum): array {
         $creditHistory = [
             'Нет' => 0,
             'Есть' => 1
@@ -36,9 +36,13 @@ class Point {
                     $data[] = $education[$value];
                     break;
                 case 'income':
+                    $data[] = $value / 1000;
+                    break;
                 case 'age':
-                    $data[] = intval($value);
+                    $data[] = $value / 100;
             }
+            if (count($data) == $paramsNum)
+                break;
         }
         return $data;
     }
