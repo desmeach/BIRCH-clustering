@@ -1,0 +1,61 @@
+<?php
+
+class Point {
+    private string $name;
+    private array $data;
+    public function __construct($elem) {
+        $this->name = $elem['name'];
+        $this->data = $this->normalizeData($elem);
+    }
+    private function normalizeData($elem): array {
+        $creditHistory = [
+            'Нет' => 0,
+            'Есть' => 1
+        ];
+        $maritalStatus = [
+            'Холост' => 0,
+            'Женат' => 1
+        ];
+        $education = [
+            'Среднее' => 0,
+            'Высшее' => 1,
+            'Уч. степень' => 2
+        ];
+        $data = [];
+        foreach ($elem as $key => $value) {
+            if ($key == 'name')
+                continue;
+            switch ($key) {
+                case 'credit_history':
+                    $data[] = $creditHistory[$value];
+                    break;
+                case 'marital_status':
+                    $data[] = $maritalStatus[$value];
+                    break;
+                case 'education':
+                    $data[] = $education[$value];
+                    break;
+                case 'income':
+                case 'age':
+                    $data[] = intval($value);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+}

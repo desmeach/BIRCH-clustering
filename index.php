@@ -1,3 +1,8 @@
+<?php
+require_once 'classes/ClusterAnalyzer.php';
+$clusterAnalyzer = new ClusterAnalyzer(2, 5, 1.5);
+?>
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,5 +16,10 @@
     <h3>
         BIRCH Algorithm
     </h3>
+    <p>
+        <?php
+        $clusterAnalyzer->analyzeClusters();
+        ?>
+    </p>
 </body>
 </html>
